@@ -1,0 +1,35 @@
+{ pkgs, ... }:
+{
+  project.name = "forgejo";
+  networks = {
+    forgejo = {
+      external = false;
+    };
+  };
+  services = {
+    server = {
+      image = {
+        enableRecommendedContents = true;
+      };
+      service = {
+        image = "codeberg.org/forgejo/forgejo:9";
+        container_name = "forgejo";
+        environment = {
+          USER_UID = "1000";
+          USER_GID = "1000";
+        };
+        restart = "always";
+        networks = ["forgejo"];
+        volumes = [
+          "/var/forge:/data"
+          "/etc/timezone:/etc/timezone:ro"
+          "/etc/localtime:/etc/localtime:ro"
+        ];
+        ports = [
+          "3000:3000"
+          "2200:22"
+        ];
+      };
+    };
+  };
+}

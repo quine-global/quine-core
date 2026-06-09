@@ -1,8 +1,7 @@
 {
   description = "NixOS configuration";
 
-  # 24.05
-  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+  inputs.nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
   inputs.nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
   inputs.agenix.url = "github:ryantm/agenix";
@@ -13,7 +12,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  inputs.home-manager.url = "github:nix-community/home-manager/release-23.11";
+  inputs.home-manager.url = "github:nix-community/home-manager/release-24.11";
   inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.nur.url = "github:nix-community/NUR";
@@ -23,6 +22,9 @@
 
   inputs.disko.url = "github:nix-community/disko";
   inputs.disko.inputs.nixpkgs.follows = "nixpkgs";
+
+  inputs.arion.url = "github:hercules-ci/arion";
+  inputs.arion.inputs.nixpkgs.follows = "nixpkgs";
 
   outputs = inputs:
     with inputs; let
@@ -37,7 +39,7 @@
       };
 
       overlays = [
-        nur.overlay
+        nur.overlays.default
         (_final: prev: {
           # this allows us to reference pkgs.unstable
           unstable = import nixpkgs-unstable {
@@ -89,18 +91,19 @@
             [
               (configurationDefaults specialArgs)
               home-manager.nixosModules.home-manager
+              arion.nixosModules.arion
             ]
             ++ modules;
         };
     in {
       nixosConfigurations.nixos = mkNixosConfiguration {
-        hostname = "pw-mainframe";
+        # FIXME: replace with your server's hostname
+        hostname = "bobs-server";
         username = "ironmagma";
         args = {
           nixPkgs = import nixpkgs {inherit system overlays;};
         };
         modules = [
-          disko.nixosModules.disko
           agenix.nixosModules.age
           ./hetzner.nix
           ./linux.nix

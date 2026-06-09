@@ -16,24 +16,22 @@
       interval:
         interval: 10m
       credentials:
-        private_key: /root/.ssh/id_rsa.pem
-        private_key_path: true
+        username: git
+        private_key:
+          file: /root/.ssh/id_rsa.pem
     '';
   };
 
+  # FIXME: replace these with your own repositories
   configFiles = [
     (makeConfigFile
-      ["com" "philippeterson"]
-      "git@github.com:philip-peterson/philippeterson.com.git"
-      "master")
+      ["com" "bobs-home"]
+      "git@github.com:bob-smith/bobs-website.git"
+      "main")
     (makeConfigFile
-      ["com" "quinefoundation" "blog"]
-      "git@github.com:philip-peterson/blog.git"
-      "master")
-    (makeConfigFile
-      ["atcsim"]
-      "git@github.com:philip-peterson/ATC-Sim.git"
-      "master")
+      ["com" "bobs-global"]
+      "git@github.com:bob-smith/landing-page.git"
+      "main")
   ];
 
   configDir =
@@ -42,7 +40,6 @@
     } ''
       mkdir -p $out
 
-      # Loop over the config files and write each one to $out
       ${lib.concatStringsSep "\n" (map (cf: ''
           echo "${cf.text}" > $out/${cf.name}
           chmod 0644 $out/${cf.name}
@@ -59,7 +56,7 @@ in {
       Restart = "always";
       RestartSec = "0";
       User = "root";
-      Group = "root";
+      Group = "repo-data";
     };
   };
 

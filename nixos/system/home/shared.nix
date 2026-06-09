@@ -16,6 +16,7 @@
     jq
     killall
     tmux
+    tree
     unzip
     vim
     wget
@@ -27,6 +28,7 @@
     go
     nodejs
     python3
+    clojure
     alejandra # nix formatter
   ];
 
@@ -36,7 +38,7 @@
   joinedString = lib.concatStringsSep " " pubKeys;
 in {
   imports = [
-    nix-index-database.hmModules.nix-index
+    nix-index-database.homeModules.nix-index
   ];
 
   home = {
@@ -47,12 +49,12 @@ in {
     sessionVariables.EDITOR = "vim";
     sessionVariables.SHELL = "/etc/profiles/per-user/${username}/bin/zsh";
 
-    packages = lib.mkDefault (
-      stable-packages
-      ++ unstable-packages
-    );
+    packages = stable-packages ++ unstable-packages;
 
-    file.".ssh/known_hosts".text = joinedString;
+    file.".ssh/known_hosts" = {
+      text = joinedString;
+      force = true;
+    };
   };
 
   programs = {
@@ -100,8 +102,9 @@ in {
         side-by-side = true;
         navigate = true;
       };
-      userEmail = "1326208+philip-peterson@users.noreply.github.com";
-      userName = "philip-peterson";
+      # FIXME: replace with your own name and email
+      userEmail = "bob@bobs-home.com";
+      userName = "bob-smith";
       extraConfig = {
         push = {
           default = "current";
@@ -114,15 +117,16 @@ in {
           colorMoved = "default";
         };
         safe = {
-          directory = "/var/petersweb-infra";
+          directory = "/var/bobs-infra";
         };
       };
+      includes = [{path = toString ../../gitconfig;}];
     };
 
     zsh = {
       enable = true;
       autocd = true;
-      enableAutosuggestions = true;
+      autosuggestion.enable = true;
       enableCompletion = true;
       defaultKeymap = "emacs";
       history.size = 10000;
@@ -150,17 +154,9 @@ in {
       ];
 
       shellAliases = {
-        "u" = "cd ..";
-        "uu" = "cd ../..";
-        "uuu" = "cd ../../..";
-        "uuuu" = "cd ../../../..";
-        gs = "git status";
         gc = "nix-collect-garbage --delete-old";
         refresh = "source ~/.zshrc";
         show_path = "echo $PATH | tr ':' '\n'";
-
-        gst = "git status";
-        gco = "git checkout";
       };
 
       envExtra = ''
@@ -168,6 +164,7 @@ in {
       '';
 
       initExtra = ''
+        ${builtins.readFile ../../aliases.zsh}
         bindkey '^p' history-search-backward
         bindkey '^n' history-search-forward
         bindkey '^e' end-of-line
@@ -177,21 +174,12 @@ in {
         bindkey ";5D" backward-word
 
         zstyle ':completion:*:*:*:*:*' menu select
-
-        # Complete . and .. special directories
         zstyle ':completion:*' special-dirs true
-
         zstyle ':completion:*' list-colors ""
         zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#) ([0-9a-z-]#)*=01;34=0=01'
-
-        # disable named-directories autocompletion
         zstyle ':completion:*:cd:*' tag-order local-directories directory-stack path-directories
-
-        # Use caching so that commands like apt and dpkg complete are useable
         zstyle ':completion:*' use-cache on
         zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/.zcompcache"
-
-        # Don't complete uninteresting users
         zstyle ':completion:*:*:*:users' ignored-patterns \
                 adm amanda apache at avahi avahi-autoipd beaglidx bin cacti canna \
                 clamav daemon dbus distcache dnsmasq dovecot fax ftp games gdm \
@@ -201,10 +189,7 @@ in {
                 operator pcap polkitd postfix postgres privoxy pulse pvm quagga radvd \
                 rpc rpcuser rpm rtkit scard shutdown squid sshd statd svn sync tftp \
                 usbmux uucp vcsa wwwrun xfs '_*'
-        # ... unless we really want to.
         zstyle '*' single-ignored complete
-
-        # https://thevaluable.dev/zsh-completion-guide-examples/
         zstyle ':completion:*' completer _extensions _complete _approximate
         zstyle ':completion:*:descriptions' format '%F{green}-- %d --%f'
         zstyle ':completion:*' group-name ""
@@ -212,7 +197,6 @@ in {
         zstyle ':completion:*' squeeze-slashes true
         zstyle ':completion:*' matcher-list "" 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
 
-        # mkcd is equivalent to takedir
         function mkcd takedir() {
           mkdir -p $@ && cd ''${@:$#}
         }
@@ -243,8 +227,6 @@ in {
         }
 
         WORDCHARS='*?[]~=&;!#$%^(){}<>'
-
-        # fixes duplication of commands when using tab-completion
         export LANG=C.UTF-8
       '';
     };

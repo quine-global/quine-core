@@ -2,22 +2,46 @@
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
     (modulesPath + "/profiles/qemu-guest.nix")
-    ./disk-config.nix
   ];
 
   # Fixes iotop
   boot.kernel.sysctl = {"kernel.task_delayacct" = 1;};
 
   boot.loader.grub = {
-    # no need to set devices, disko will add all devices that have a EF02 partition to the list already
-    # devices = [ ];
-    efiSupport = true;
-    efiInstallAsRemovable = true;
+    enable = true;
+    device = "/dev/sda";
+    efiSupport = false;
+  };
+
+  # FIXME: replace with your actual disk UUID (find with: lsblk -f)
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/YOUR-DISK-UUID-HERE";
+    fsType = "ext4";
+  };
+
+  networking.useDHCP = false;
+  systemd.network = {
+    enable = true;
+    # FIXME: replace enp1s0 with your actual NIC name (check with: ip link)
+    networks."10-enp1s0" = {
+      matchConfig.Name = "enp1s0";
+      networkConfig.DHCP = "ipv4";
+      dhcpV4Config = {
+        UseGateway = false;
+        UseRoutes = false;
+      };
+      routes = [
+        {routeConfig = {Gateway = "172.31.1.1"; GatewayOnLink = true;};}
+      ];
+    };
   };
 
   services.openssh = {
     enable = true;
-    settings.PasswordAuthentication = false;
+    # FIXME: set to false once your SSH keys are in place
+    settings.PasswordAuthentication = true;
+    settings.PermitRootLogin = "yes";
+    settings.AllowUsers = ["root"];
     extraConfig = ''
       PrintLastLog no
     '';
@@ -32,7 +56,7 @@
         type = "ed25519";
       }
 
-      # For secrets
+      # For secrets decryption (agenix)
       {
         path = "/root/.ssh/id_rsa_nix";
         type = "ed25519";

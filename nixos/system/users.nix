@@ -12,10 +12,11 @@
     authorizedKeys,
     homeConfig ? null,
     isNormalUser ? true,
+    enableHomeManager ? false,
   }: {
     extraGroups = extraGroups ++ [username];
 
-    home-manager.users.${username} = homeConfig;
+    home-manager.users.${username} = if enableHomeManager then homeConfig else {};
 
     users.users.${username} = {
       isNormalUser = isNormalUser;
@@ -38,8 +39,9 @@
     isNormalUser = false;
     username = "root";
     home = "/root";
-    extraGroups = [];
+    extraGroups = ["podman"];
     authorizedKeys = authorizedKeys;
+    enableHomeManager = true;
     homeConfig = import ./home/root.nix {
       username = "root";
       inherit config pkgs nix-index-database lib;
@@ -52,8 +54,10 @@
     extraGroups = [
       "wheel"
       "docker"
+      "podman"
     ];
     authorizedKeys = authorizedKeys;
+    enableHomeManager = false;
     homeConfig = import ./home/ironmagma.nix {
       username = "ironmagma";
       inherit config pkgs nix-index-database lib;
@@ -66,5 +70,6 @@ in {
   };
 
   users.users = rootUser.users.users // ironmagmaUser.users.users // {};
-  home-manager.users = rootUser.home-manager.users // ironmagmaUser.home-manager.users;
+  home-manager.users = rootUser.home-manager.users;
+  home-manager.backupFileExtension = "hm-backup";
 }
