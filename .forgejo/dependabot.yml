@@ -1,0 +1,7 @@
+# Dependabot on the forge (quine-global-labs/dependabot-core, forgejo/README.md):
+# Dependabot's version 2 format; every daily run checks everything (no
+# schedules, groups or ignore rules yet).
+version: 2
+updates:
+  - package-ecosystem: nix
+    directory: /nixos
