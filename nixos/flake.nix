@@ -12,7 +12,7 @@
     inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  inputs.home-manager.url = "github:nix-community/home-manager/release-24.11";
+  inputs.home-manager.url = "github:nix-community/home-manager/release-26.05";
   inputs.home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
   inputs.nur.url = "github:nix-community/NUR";
